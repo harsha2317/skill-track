@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101827">
+<title>Skill Track</title>
+<style>
+:root {
+  --bg: #101827;
+  --panel: #1b2638;
+  --panel2: #243249;
+  --text: #f4f7fb;
+  --muted: #a8b4c7;
+  --blue: #5b8cff;
+  --green: #35c98b;
+  --red: #ff6978;
+  --border: #34435a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header {
+  padding: 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+header h1 { margin: 0 0 6px; }
+header p { margin: 0; color: var(--muted); }
+.container { max-width: 1100px; margin: auto; padding: 20px; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.card, .stat {
+  background: var(--panel);
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.stat strong { display: block; font-size: 28px; margin-top: 8px; }
+h2 { margin-top: 0; }
+form { display: grid; gap: 12px; }
+input, select, textarea, button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font: inherit;
+}
+input, select, textarea {
+  background: #111c2c;
+  color: var(--text);
+}
+button {
+  cursor: pointer;
+  border: 0;
+  background: var(--blue);
+  color: white;
+  font-weight: bold;
+}
+button:hover { opacity: .9; }
+button.secondary { background: var(--panel2); }
+button.success { background: #187d59; }
+button.danger { background: #873947; }
+.section { margin-top: 20px; }
+.item {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
+}
+.item h3 { margin: 0 0 8px; overflow-wrap: anywhere; }
+.item p { color: var(--muted); overflow-wrap: anywhere; }
+.item a { color: #8db4ff; overflow-wrap: anywhere; }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.actions button { width: auto; flex: 1 1 120px; }
+.badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  background: var(--panel2);
+}
+.completed { color: var(--green); }
+.pending { color: #ffd166; }
+.progress {
+  height: 8px;
+  background: #34435a;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.progress div { height: 100%; background: var(--green); }
+.small { color: var(--muted); font-size: 13px; }
+.empty { color: var(--muted); padding: 12px 0; }
+footer { text-align: center; padding: 24px; color: var(--muted); }
+@media (min-width: 700px) {
+  .two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 Skill Track</h1>
+  <p>Your personal learning and course progress tracker</p>
+</header>
+
+<main class="container">
+  <section class="stats">
+    <div class="stat">Total Courses<strong id="courseCount">0</strong></div>
+    <div class="stat">Completed<strong id="completedCount">0</strong></div>
+    <div class="stat">Pending Tasks<strong id="pendingCount">0</strong></div>
+    <div class="stat">Learning Streak<strong id="streakCount">0 🔥</strong></div>
+  </section>
+
+  <section class="card">
+    <h2>Add a Course</h2>
+    <form id="courseForm">
+      <input id="courseName" placeholder="Course name" required maxlength="150">
+      <select id="coursePlatform" required>
+        <option value="">Select platform</option>
+        <option>Google Cloud Skills Boost</option>
+        <option>Coursera</option>
+        <option>Cisco Networking Academy</option>
+        <option>Udemy</option>
+        <option>NPTEL / SWAYAM</option>
+        <option>Other</option>
+      </select>
+      <input id="courseUrl" type="url" placeholder="Course URL (https://...)" required>
+      <button type="submit">Add Course</button>
+    </form>
+  </section>
+
+  <div class="two-columns">
+    <section class="section">
+      <div class="card">
+        <h2>My Courses</h2>
+        <input id="courseSearch" placeholder="Search courses..." aria-label="Search courses">
+        <div id="courseList"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card">
+        <h2>Add an Assignment</h2>
+        <form id="taskForm">
+          <input id="taskName" placeholder="Assignment or task name" required maxlength="150">
+          <input id="taskDue" type="date">
+          <select id="taskCourse">
+            <option value="">General task</option>
+          </select>
+          <button type="submit">Add Task</button>
+        </form>
+        <h2 style="margin-top:24px">My Assignments</h2>
+        <div id="taskList"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card section">
+    <h2>Daily Learning</h2>
+    <p id="todayStatus">Record your learning for today.</p>
+    <button id="learnButton" class="success">I Studied Today ✓</button>
+    <p class="small">Your streak is calculated from consecutive calendar days.</p>
+  </section>
+
+  <section class="card section">
+    <h2>Backup & Restore</h2>
+    <p class="small">Download a backup of your courses, assignments, and streak history.</p>
+    <div class="actions">
+      <button id="exportButton" class="secondary">Export Backup</button>
+      <button id="importButton" class="secondary">Import Backup</button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </section>
+</main>
+
+<footer>Skill Track · Learn consistently, grow every day.</footer>
+
+<script>
+"use strict";
+
+const STORAGE = {
+  courses: "skillTrackCourses",
+  tasks: "skillTrackTasks",
+  days: "skillTrackDays"
+};
+
+function load(key, fallback) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key));
+    return data ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+let courses = load(STORAGE.courses, []);
+let tasks = load(STORAGE.tasks, []);
+let learningDays = load(STORAGE.days, []);
+
+function save() {
+  localStorage.setItem(STORAGE.courses, JSON.stringify(courses));
+  localStorage.setItem(STORAGE.tasks, JSON.stringify(tasks));
+  localStorage.setItem(STORAGE.days, JSON.stringify(learningDays));
+}
+
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function safeUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["https:", "http:"].includes(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  })[ch]);
+}
+
+function streak() {
+  const days = new Set(learningDays);
+  let count = 0;
+  const d = new Date();
+  if (!days.has(today())) d.setDate(d.getDate() - 1);
+
+  while (days.has(
+    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
+  )) {
+    count++;
+    d.setDate(d.getDate() - 1);
+  }
+  return count;
+}
+
+function render() {
+  document.getElementById("courseCount").textContent = courses.length;
+  document.getElementById("completedCount").textContent =
+    courses.filter(c => c.completed).length;
+  document.getElementById("pendingCount").textContent =
+    tasks.filter(t => !t.completed).length;
+  document.getElementById("streakCount").textContent = streak() + " 🔥";
+
+  document.getElementById("todayStatus").textContent =
+    learningDays.includes(today())
+      ? "Great work! You recorded learning for today. 🎉"
+      : "Record your learning for today.";
+
+  document.getElementById("learnButton").disabled =
+    learningDays.includes(today());
+  document.getElementById("learnButton").textContent =
+    learningDays.includes(today()) ? "Recorded for Today ✓" : "I Studied Today ✓";
+
+  renderCourses();
+  renderTasks();
+  renderCourseOptions();
+}
+
+function renderCourses() {
+  const list = document.getElementById("courseList");
+  const search = document.getElementById("courseSearch").value.toLowerCase();
+
+  const filtered = courses.filter(c =>
+    (c.name + " " + c.platform).toLowerCase().includes(search)
+  );
+
+  if (!filtered.length) {
+    list.innerHTML = '<p class="empty">No courses found. Add your first course above.</p>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => `
+    <article class="item">
+      <h3>${escapeHtml(c.name)}</h3>
+      <span class="badge">${escapeHtml(c.platform)}</span>
+      <span class="badge ${c.completed ? "completed" : "pending"}">
+        ${c.completed ? "Completed" : "In Progress"}
+      </span>
+      <p><a href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer">Open course ↗</a></p>
+      <div class="progress"><div style="width:${c.completed ? 100 : 0}%"></div></div>
+      <p class="small">${c.completed ? "100% complete" : "Not marked complete"}</p>
+      ${c.platform === "Google Cloud Skills Boost" ? `
+        <label class="small" for="badge-${c.id}">Official badge or credential URL</label>
+        <input id="badge-${c.id}" type="url"
+          placeholder="https://..." value="${escapeHtml(c.badgeUrl || "")}">
+        <div class="actions">
+          <button class="secondary" data-action="save-badge" data-id="${c.id}">Save Badge Link</button>
+          ${c.badgeUrl ? `<a href="${escapeHtml(c.badgeUrl)}" target="_blank" rel="noopener noreferrer">Open badge ↗</a>` : ""}
+        </div>
+        <p class="small">${c.evidenceReviewed
+          ? "Evidence reviewed by you; not independently verified by Google."
+          : "Badge links are evidence only until you review them."}</p>
+        ${c.badgeUrl && !c.completed ? `
+          <button class="success" data-action="review-evidence" data-id="${c.id}">
+            Confirm Evidence Reviewed
+          </button>` : ""}
+      ` : ""}
+      <div class="actions">
+        <button data-action="toggle-course" data-id="${c.id}" class="${c.completed ? "secondary" : "success"}">
+          ${c.completed ? "Mark In Progress" : "Mark Completed"}
+        </button>
+        <button data-action="delete-course" data-id="${c.id}" class="danger">Delete</button>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderTasks() {
+  const list = document.getElementById("taskList");
+  if (!tasks.length) {
+    list.innerHTML = '<p class="empty">No assignments yet.</p>';
+    return;
+  }
+
+  list.innerHTML = tasks.map(t => {
+    const course = courses.find(c => c.id === t.courseId);
+    return `
+      <article class="item">
+        <h3>${escapeHtml(t.name)}</h3>
+        <p>${t.due ? "Due: " + escapeHtml(t.due) : "No due date"}
+          ${course ? "<br>Course: " + escapeHtml(course.name) : ""}</p>
+        <span class="badge ${t.completed ? "completed" : "pending"}">
+          ${t.completed ? "Completed" : "Pending"}
+        </span>
+        <div class="actions">
+          <button class="secondary" data-action="toggle-task" data-id="${t.id}">
+            ${t.completed ? "Reopen" : "Complete"}
+          </button>
+          <button class="danger" data-action="delete-task" data-id="${t.id}">Delete</button>
+        </div>
+      </article>`;
+  }).join("");
+}
+
+function renderCourseOptions() {
+  const select = document.getElementById("taskCourse");
+  const current = select.value;
+  select.innerHTML = '<option value="">General task</option>' +
+    courses.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  if (courses.some(c => c.id === current)) select.value = current;
+}
+
+document.getElementById("courseForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const name = document.getElementById("courseName").value.trim();
+  const platform = document.getElementById("coursePlatform").value;
+  const url = safeUrl(document.getElementById("courseUrl").value.trim());
+
+  if (!name || !platform || !url) {
+    alert("Enter a course name, platform, and valid HTTP/HTTPS URL.");
+    return;
+  }
+
+  courses.push({
+    id: crypto.randomUUID(),
+    name, platform, url,
+    completed: false,
+    badgeUrl: "",
+    evidenceReviewed: false,
+    createdAt: new Date().toISOString()
+  });
+
+  save();
+  event.target.reset();
+  render();
+});
+
+document.getElementById("taskForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const name = document.getElementById("taskName").value.trim();
+  if (!name) return;
+
+  tasks.push({
+    id: crypto.randomUUID(),
+    name,
+    due: document.getElementById("taskDue").value,
+    courseId: document.getElementById("taskCourse").value,
+    completed: false
+  });
+
+  save();
+  event.target.reset();
+  render();
+});
+
+document.getElementById("courseSearch").addEventListener("input", renderCourses);
+
+document.getElementById("learnButton").addEventListener("click", () => {
+  if (!learningDays.includes(today())) learningDays.push(today());
+  save();
+  render();
+});
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+
+  const { action, id } = button.dataset;
+
+  if (action === "toggle-course") {
+    const c = courses.find(x => x.id === id);
+    if (c) c.completed = !c.completed;
+  }
+
+  if (action === "delete-course") {
+    if (!confirm("Delete this course? Related assignments will become general tasks.")) return;
+    courses = courses.filter(c => c.id !== id);
+    tasks.forEach(t => { if (t.courseId === id) t.courseId = ""; });
+  }
+
+  if (action === "toggle-task") {
+    const t = tasks.find(x => x.id === id);
+    if (t) t.completed = !t.completed;
+  }
+
+  if (action === "delete-task") {
+    tasks = tasks.filter(t => t.id !== id);
+  }
+
+  if (action === "save-badge") {
+    const c = courses.find(x => x.id === id);
+    const input = document.getElementById("badge-" + id);
+    const url = safeUrl(input.value.trim());
+    if (!url) {
+      alert("Enter a valid HTTP/HTTPS badge URL.");
+      return;
+    }
+    c.badgeUrl = url;
+    c.evidenceReviewed = false;
+  }
+
+  if (action === "review-evidence") {
+    const c = courses.find(x => x.id === id);
+    if (!c || !c.badgeUrl) return;
+    if (!confirm("Have you opened and reviewed the official badge or credential? This does not independently verify it with Google.")) return;
+    c.evidenceReviewed = true;
+    c.completed = true;
+  }
+
+  save();
+  render();
+});
+
+document.getElementById("exportButton").addEventListener("click", () => {
+  const data = { courses, tasks, learningDays, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "skill-track-backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("importButton").addEventListener("click", () => {
+  document.getElementById("importFile").click();
+});
+
+document.getElementById("importFile").addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.courses) ||
+        !Array.isArray(data.tasks) ||
+        !Array.isArray(data.learningDays)) {
+      throw new Error("Invalid backup structure");
+    }
+
+    if (!confirm("Replace current Skill Track data with this backup?")) return;
+
+    courses = data.courses;
+    tasks = data.tasks;
+    learningDays = data.learningDays;
+    save();
+    render();
+    alert("Backup imported successfully.");
+  } catch {
+    alert("Could not import this file. Choose a valid Skill Track JSON backup.");
+  } finally {
+    event.target.value = "";
+  }
+});
+
+render();
+</script>
+</body>
+</html>
